@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Ribhi — Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg:      #05070A;
+    --bg2:     #0D1117;
+    --bg3:     #131920;
+    --teal:    #00D4B8;
+    --teal-d:  #009E8E;
+    --gold:    #F0B429;
+    --red:     #F43F5E;
+    --text:    #E2EAF4;
+    --muted:   #5A6880;
+    --border:  rgba(255,255,255,0.06);
+    --glass:   rgba(13,17,23,0.85);
+    --safe-bot: env(safe-area-inset-bottom, 0px);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-bottom: calc(72px + var(--safe-bot));
+  }
+
+  .grid-bg {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      linear-gradient(rgba(0,212,184,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,184,0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  .grid-bg::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 30% at 0% 0%, rgba(0,212,184,0.06) 0%, transparent 50%),
+      radial-gradient(ellipse 40% 40% at 100% 100%, rgba(240,180,41,0.05) 0%, transparent 50%);
+  }
+
+  /* ── NAV ── */
+  .top-bar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(5,7,10,0.94);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(16px);
+    padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo { display: flex; align-items: center; gap: 10px; }
+  .nav-logo .mark {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--teal), var(--gold));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 14px; color: #05070A;
+  }
+  .nav-logo .name { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; }
+  .nav-logo .name span { color: var(--teal); }
+
+  .user-chip {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted);
+  }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--teal), var(--gold));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 12px; color: #05070A;
+  }
+
+  /* ── LAYOUT ── */
+  .main { position: relative; z-index: 1; max-width: 640px; margin: 0 auto; padding: 28px 20px; }
+
+  /* ── SECTION CARD ── */
+  .section-card {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    backdrop-filter: blur(16px);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .section-head {
+    padding: 18px 22px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; font-size: 15px;
+  }
+  .section-icon.teal { background: rgba(0,212,184,0.12); }
+  .section-icon.gold { background: rgba(240,180,41,0.12); }
+  .section-icon.red  { background: rgba(244,63,94,0.12);  }
+  .section-body { padding: 22px; }
+
+  /* ── FIELDS ── */
+  .field-wrap { margin-bottom: 18px; }
+  .field-wrap:last-child { margin-bottom: 0; }
+  .field-label {
+    display: flex; justify-content: space-between;
+    font-size: 11px; font-weight: 600;
+    color: var(--muted); margin-bottom: 7px;
+    letter-spacing: 0.6px; text-transform: uppercase;
+    font-family: 'DM Mono', monospace;
+  }
+  .field {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 12px 14px;
+    color: var(--text); font-family: 'Syne', sans-serif;
+    font-size: 14px; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+  .field:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(0,212,184,0.1); }
+  .field::placeholder { color: var(--muted); font-size: 13px; }
+  select.field {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235A6880' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+  }
+  select.field option { background: #131920; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .input-addon { position: relative; }
+  .input-addon .field { padding-right: 48px; }
+  .input-addon .addon {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); pointer-events: none;
+  }
+
+  /* ── TOGGLE ── */
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-info p { font-size: 14px; font-weight: 600; }
+  .toggle-info span { font-size: 12px; color: var(--muted); margin-top: 2px; display: block; font-family: 'DM Mono', monospace; }
+
+  .toggle {
+    position: relative; width: 44px; height: 24px;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.08); border-radius: 24px;
+    transition: 0.3s;
+  }
+  .toggle-slider::before {
+    content: ''; position: absolute;
+    width: 18px; height: 18px; left: 3px; bottom: 3px;
+    background: var(--muted); border-radius: 50%;
+    transition: 0.3s;
+  }
+  .toggle input:checked + .toggle-slider { background: rgba(0,212,184,0.25); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(20px); background: var(--teal); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 22px; border-radius: 10px;
+    font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+    border: none; cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.45; pointer-events: none; }
+  .btn-full { width: 100%; }
+
+  .btn-teal {
+    background: linear-gradient(135deg, var(--teal), var(--teal-d));
+    color: #05070A; font-weight: 800;
+    box-shadow: 0 4px 18px rgba(0,212,184,0.2);
+  }
+  .btn-teal:hover { box-shadow: 0 8px 28px rgba(0,212,184,0.35); transform: translateY(-1px); }
+
+  .btn-ghost {
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+  }
+  .btn-ghost:hover { border-color: rgba(255,255,255,0.15); color: var(--text); }
+
+  .btn-danger {
+    background: transparent; border: 1px solid rgba(244,63,94,0.25); color: var(--red);
+  }
+  .btn-danger:hover { background: rgba(244,63,94,0.08); }
+
+  /* ── PAGE TITLE ── */
+  .page-title { margin-bottom: 28px; }
+  .page-title h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+  .page-title p { font-size: 13px; color: var(--muted); margin-top: 5px; font-family: 'DM Mono', monospace; }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+    background: rgba(5,7,10,0.96);
+    border-top: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    padding-bottom: var(--safe-bot);
+    display: flex;
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 3px; padding: 10px 6px 8px;
+    cursor: pointer; text-decoration: none; color: var(--muted);
+    font-size: 10px; font-weight: 700; font-family: 'Syne', sans-serif;
+    transition: color 0.2s;
+  }
+  .nav-item .ni { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; transition: background 0.2s, transform 0.2s; }
+  .nav-item.active { color: var(--teal); }
+  .nav-item.active .ni { background: rgba(0,212,184,0.12); transform: translateY(-2px); }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; bottom: calc(85px + var(--safe-bot)); left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg3); border: 1px solid rgba(0,212,184,0.25);
+    border-radius: 10px; padding: 11px 20px;
+    font-size: 13px; font-weight: 600; z-index: 1000;
+    white-space: nowrap; opacity: 0; pointer-events: none;
+    transition: all 0.35s cubic-bezier(.34,1.4,.64,1);
+    font-family: 'DM Mono', monospace;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.err  { border-color: rgba(244,63,94,0.35); color: var(--red); }
+
+  /* ── LOADER ── */
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(5,7,10,0.4); border-top-color: #05070A;
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (min-width: 768px) {
+    body { padding-bottom: 0; }
+    .bottom-nav { display: none; }
+  }
+  @media (max-width: 480px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div id="toast"></div>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <a href="index.html" class="nav-logo" style="text-decoration:none;color:inherit">
+    <div class="mark">R</div>
+    <div class="name">Ri<span>bhi</span></div>
+  </a>
+  <div class="user-chip">
+    <div class="avatar" id="navAvatar">?</div>
+    <span id="navEmail">Not signed in</span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="page-title">
+    <h1>Settings</h1>
+    <p>Manage your profile, locale, and cost defaults</p>
+  </div>
+
+  <!-- ── ACCOUNT ── -->
+  <div class="section-card">
+    <div class="section-head">
+      <div class="section-icon teal">👤</div>
+      <div>
+        <div style="font-size:14px;font-weight:700">Account</div>
+        <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Profile & authentication</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="field-wrap">
+        <label class="field-label">Full Name</label>
+        <input type="text" id="s_name" class="field" placeholder="Alex Chen"/>
+      </div>
+      <div class="field-wrap">
+        <label class="field-label">Email Address <span style="color:rgba(0,212,184,0.6);font-size:10px">read-only</span></label>
+        <input type="email" id="s_email" class="field" placeholder="" readonly style="opacity:0.5;cursor:default"/>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <p>Stay signed in</p>
+          <span>Persist session across browser restarts</span>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="s_persist" checked onchange="savePersist(this.checked)"/>
+          <div class="toggle-slider"></div>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LOCALE & CURRENCY ── -->
+  <div class="section-card">
+    <div class="section-head">
+      <div class="section-icon gold">🌍</div>
+      <div>
+        <div style="font-size:14px;font-weight:700">Locale & Currency</div>
+        <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Market & tax settings</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="field-wrap">
+        <label class="field-label">Country</label>
+        <select id="s_country" class="field" onchange="onCountryChange()">
+          <option value="US">🇺🇸 United States</option>
+          <option value="GB">🇬🇧 United Kingdom</option>
+          <option value="CA">🇨🇦 Canada</option>
+          <option value="AU">🇦🇺 Australia</option>
+          <option value="DE">🇩🇪 Germany</option>
+          <option value="FR">🇫🇷 France</option>
+          <option value="MA">🇲🇦 Morocco</option>
+          <option value="AE">🇦🇪 UAE</option>
+          <option value="SA">🇸🇦 Saudi Arabia</option>
+          <option value="EG">🇪🇬 Egypt</option>
+          <option value="NG">🇳🇬 Nigeria</option>
+          <option value="BR">🇧🇷 Brazil</option>
+          <option value="MX">🇲🇽 Mexico</option>
+          <option value="IN">🇮🇳 India</option>
+          <option value="SG">🇸🇬 Singapore</option>
+          <option value="OTHER">🌐 Other</option>
+        </select>
+      </div>
+      <div class="grid-2">
+        <div class="field-wrap">
+          <label class="field-label">Currency</label>
+          <select id="s_currency" class="field">
+            <option value="USD">USD — $</option>
+            <option value="GBP">GBP — £</option>
+            <option value="CAD">CAD — C$</option>
+            <option value="AUD">AUD — A$</option>
+            <option value="EUR">EUR — €</option>
+            <option value="MAD">MAD — DH</option>
+            <option value="AED">AED — AED</option>
+            <option value="SAR">SAR — SAR</option>
+            <option value="EGP">EGP — EGP</option>
+            <option value="NGN">NGN — ₦</option>
+            <option value="BRL">BRL — R$</option>
+            <option value="MXN">MXN — MX$</option>
+            <option value="INR">INR — ₹</option>
+            <option value="SGD">SGD — S$</option>
+          </select>
+        </div>
+        <div class="field-wrap">
+          <label class="field-label">Default Tax Rate</label>
+          <div class="input-addon">
+            <input type="number" id="s_tax" class="field" placeholder="20" min="0" max="100" step="0.5"/>
+            <span class="addon">%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── OPERATIONAL COSTS ── -->
+  <div class="section-card">
+    <div class="section-head">
+      <div class="section-icon teal">📦</div>
+      <div>
+        <div style="font-size:14px;font-weight:700">Default Operational Costs</div>
+        <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Pre-filled in the calculator</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="grid-2">
+        <div class="field-wrap">
+          <label class="field-label">Shipping / order <span id="shipCurr" style="color:var(--teal)">$</span></label>
+          <input type="number" id="s_ship" class="field" placeholder="5.00" min="0" step="0.5"/>
+        </div>
+        <div class="field-wrap">
+          <label class="field-label">Packaging / order <span id="packCurr" style="color:var(--teal)">$</span></label>
+          <input type="number" id="s_pack" class="field" placeholder="1.50" min="0" step="0.5"/>
+        </div>
+        <div class="field-wrap">
+          <label class="field-label">Default Ad CPA <span id="mktgCurr" style="color:var(--teal)">$</span></label>
+          <input type="number" id="s_mktg" class="field" placeholder="8.00" min="0" step="0.5"/>
+        </div>
+        <div class="field-wrap">
+          <label class="field-label">Return handling <span id="retCurr" style="color:var(--teal)">$</span></label>
+          <input type="number" id="s_retcost" class="field" placeholder="3.00" min="0" step="0.5"/>
+        </div>
+      </div>
+      <div class="field-wrap">
+        <label class="field-label">Monthly Fixed Costs <span id="fixCurr" style="color:var(--teal)">$</span></label>
+        <input type="number" id="s_fixed" class="field" placeholder="500" min="0" step="10"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SAVE ── -->
+  <button class="btn btn-teal btn-full" id="saveBtn" onclick="saveSettings()" style="margin-bottom:16px">
+    <span id="saveLbl">Save Changes</span>
+  </button>
+
+  <!-- ── DANGER ZONE ── -->
+  <div class="section-card" style="border-color:rgba(244,63,94,0.15)">
+    <div class="section-head">
+      <div class="section-icon red">⚠️</div>
+      <div>
+        <div style="font-size:14px;font-weight:700">Danger Zone</div>
+        <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace">Irreversible actions</div>
+      </div>
+    </div>
+    <div class="section-body" style="display:flex;gap:12px;flex-wrap:wrap">
+      <button class="btn btn-danger" onclick="doSignOut()">Sign Out</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Delete Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <a href="index.html" class="nav-item">
+    <div class="ni">📊</div><span>Dashboard</span>
+  </a>
+  <a href="settings.html" class="nav-item active">
+    <div class="ni">⚙️</div><span>Settings</span>
+  </a>
+  <a href="affiliate.html" class="nav-item">
+    <div class="ni">🔗</div><span>Resources</span>
+  </a>
+</nav>
+
+<script>
+const SUPABASE_URL  = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY';
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON, {
+  auth: { persistSession: true, autoRefreshToken: true }
+});
+
+let currentUser   = null;
+let userProfile   = null;
+
+const CURRENCY_SYMBOLS = { USD:'$', GBP:'£', CAD:'C$', AUD:'A$', EUR:'€', MAD:'DH', AED:'AED', SAR:'SAR', EGP:'EGP', NGN:'₦', BRL:'R$', MXN:'MX$', INR:'₹', SGD:'S$' };
+
+const COUNTRY_DEFAULTS = {
+  US:{ currency:'USD', tax:10 }, GB:{ currency:'GBP', tax:20 }, CA:{ currency:'CAD', tax:13 },
+  AU:{ currency:'AUD', tax:10 }, DE:{ currency:'EUR', tax:19 }, FR:{ currency:'EUR', tax:20 },
+  MA:{ currency:'MAD', tax:20 }, AE:{ currency:'AED', tax:5  }, SA:{ currency:'SAR', tax:15 },
+  EG:{ currency:'EGP', tax:14 }, NG:{ currency:'NGN', tax:7.5}, BR:{ currency:'BRL', tax:17 },
+  MX:{ currency:'MXN', tax:16 }, IN:{ currency:'INR', tax:18 }, SG:{ currency:'SGD', tax:9  },
+};
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const { data:{ session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'registration.html'; return; }
+  currentUser = session.user;
+
+  // Load persist preference
+  const persist = localStorage.getItem('ribhi_persist') !== 'false';
+  document.getElementById('s_persist').checked = persist;
+
+  await loadProfile();
+});
+
+async function loadProfile() {
+  const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  if (data) {
+    userProfile = data;
+    document.getElementById('s_name').value     = data.full_name || '';
+    document.getElementById('s_email').value    = currentUser.email || '';
+    document.getElementById('s_country').value  = data.country || 'US';
+    document.getElementById('s_currency').value = data.currency || 'USD';
+    document.getElementById('s_tax').value      = data.default_tax_rate || 0;
+    document.getElementById('s_fixed').value    = data.fixed_costs || 0;
+
+    // Load operational defaults from localStorage
+    const d = JSON.parse(localStorage.getItem('ribhi_op_defaults') || '{}');
+    document.getElementById('s_ship').value    = d.ship    || 5;
+    document.getElementById('s_pack').value    = d.pack    || 1.5;
+    document.getElementById('s_mktg').value    = d.mktg    || 8;
+    document.getElementById('s_retcost').value = d.retcost || 3;
+
+    updateCurrencyLabels(data.currency || 'USD');
+    // Nav
+    document.getElementById('navAvatar').textContent = (data.full_name || 'U').charAt(0).toUpperCase();
+    document.getElementById('navEmail').textContent  = currentUser.email || '';
+  }
+}
+
+function onCountryChange() {
+  const code = document.getElementById('s_country').value;
+  const m    = COUNTRY_DEFAULTS[code];
+  if (m) {
+    document.getElementById('s_currency').value = m.currency;
+    document.getElementById('s_tax').value      = m.tax;
+    updateCurrencyLabels(m.currency);
+  }
+}
+
+function updateCurrencyLabels(cur) {
+  const sym = CURRENCY_SYMBOLS[cur] || cur;
+  ['shipCurr','packCurr','mktgCurr','retCurr','fixCurr'].forEach(id => {
+    document.getElementById(id).textContent = sym;
+  });
+}
+
+async function saveSettings() {
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  document.getElementById('saveLbl').innerHTML = '<div class="spinner"></div>';
+
+  const name     = document.getElementById('s_name').value.trim();
+  const country  = document.getElementById('s_country').value;
+  const currency = document.getElementById('s_currency').value;
+  const tax      = parseFloat(document.getElementById('s_tax').value) || 0;
+  const fixed    = parseFloat(document.getElementById('s_fixed').value) || 0;
+  const symbol   = CURRENCY_SYMBOLS[currency] || currency;
+
+  try {
+    const { error } = await sb.from('profiles').update({
+      full_name: name, country, currency,
+      currency_symbol: symbol,
+      default_tax_rate: tax, fixed_costs: fixed
+    }).eq('id', currentUser.id);
+    if (error) throw error;
+
+    // Save operational defaults locally
+    const opDefaults = {
+      ship:    parseFloat(document.getElementById('s_ship').value)    || 0,
+      pack:    parseFloat(document.getElementById('s_pack').value)    || 0,
+      mktg:    parseFloat(document.getElementById('s_mktg').value)    || 0,
+      retcost: parseFloat(document.getElementById('s_retcost').value) || 0,
+    };
+    localStorage.setItem('ribhi_op_defaults', JSON.stringify(opDefaults));
+    toast('✓ Settings saved successfully');
+  } catch (err) {
+    toast(err.message || 'Save failed', true);
+  } finally {
+    btn.disabled = false;
+    document.getElementById('saveLbl').textContent = 'Save Changes';
+  }
+}
+
+function savePersist(checked) {
+  localStorage.setItem('ribhi_persist', checked ? 'true' : 'false');
+  toast(checked ? '✓ Session will persist' : '✓ Session cleared on close');
+}
+
+async function doSignOut() {
+  await sb.auth.signOut();
+  window.location.href = 'registration.html';
+}
+
+function confirmDelete() {
+  if (confirm('Delete your account and all data? This is irreversible.')) {
+    toast('Contact support to complete account deletion.', true);
+  }
+}
+
+let _t;
+function toast(msg, err = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.toggle('err', err);
+  el.classList.add('show');
+  clearTimeout(_t);
+  _t = setTimeout(() => el.classList.remove('show'), 3200);
+}
+</script>
+</body>
+</html>
