@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Ribhi — Resources</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+:root {
+  --bg:      #05070A;
+  --bg2:     #0D1117;
+  --bg3:     #131920;
+  --teal:    #00D4B8;
+  --teal-d:  #009E8E;
+  --gold:    #F0B429;
+  --red:     #F43F5E;
+  --blue:    #60A5FA;
+  --violet:  #A78BFA;
+  --text:    #E2EAF4;
+  --muted:   #5A6880;
+  --border:  rgba(255,255,255,0.06);
+  --glass:   rgba(13,17,23,0.85);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);
+  min-height:100vh;min-height:100dvh;
+  padding-bottom:calc(72px + var(--safe-bot));
+}
+
+.bg-field{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(0,212,184,0.02) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,184,0.02) 1px,transparent 1px);
+  background-size:60px 60px;
+}
+.bg-field::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 50% 30% at 15% 10%, rgba(0,212,184,0.07) 0%,transparent 55%),
+    radial-gradient(ellipse 40% 35% at 85% 90%, rgba(167,139,250,0.06) 0%,transparent 55%);
+}
+
+/* ── NAV ── */
+.top-bar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(5,7,10,0.94);border-bottom:1px solid var(--border);
+  backdrop-filter:blur(16px);padding:13px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+.nav-logo .mark{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--teal),var(--gold));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#05070A}
+.nav-logo .name{font-size:18px;font-weight:800;letter-spacing:-0.4px}
+.nav-logo .name span{color:var(--teal)}
+
+/* ── MAIN ── */
+.main{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:28px 20px}
+
+/* ── HERO ── */
+.hero{
+  text-align:center;padding:44px 24px 40px;
+  background:var(--glass);border:1px solid var(--border);border-radius:24px;
+  backdrop-filter:blur(16px);margin-bottom:36px;position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 60% at 50% 0%, rgba(0,212,184,0.07) 0%,transparent 60%);
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(0,212,184,0.08);border:1px solid rgba(0,212,184,0.2);
+  border-radius:20px;padding:5px 14px;margin-bottom:18px;
+  font-family:'DM Mono',monospace;font-size:11px;color:var(--teal);letter-spacing:0.3px;
+}
+.hero h1{font-size:32px;font-weight:800;letter-spacing:-0.5px;margin-bottom:10px}
+.hero h1 span{color:var(--teal)}
+.hero p{font-size:14px;color:var(--muted);max-width:480px;margin:0 auto;line-height:1.7;font-family:'DM Mono',monospace}
+
+/* ── SECTION ── */
+.sec-title{
+  font-size:11px;font-weight:600;color:var(--muted);letter-spacing:1.5px;
+  text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.sec-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── RESOURCE CARDS ── */
+.resources-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px}
+@media(max-width:750px){.resources-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.resources-grid{grid-template-columns:1fr}}
+
+.res-card{
+  background:var(--glass);border:1px solid var(--border);border-radius:16px;
+  padding:20px;text-decoration:none;color:var(--text);
+  transition:border-color 0.25s,transform 0.25s,box-shadow 0.25s;
+  display:flex;flex-direction:column;gap:12px;
+  backdrop-filter:blur(12px);position:relative;overflow:hidden;
+}
+.res-card::before{
+  content:'';position:absolute;inset:0;border-radius:16px;opacity:0;
+  transition:opacity 0.25s;
+}
+.res-card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,0.12)}
+.res-card:hover::before{opacity:1}
+
+.res-card.c-teal:hover    {box-shadow:0 8px 30px rgba(0,212,184,0.12);border-color:rgba(0,212,184,0.25)}
+.res-card.c-teal::before  {background:radial-gradient(ellipse at 80% 0%,rgba(0,212,184,0.07),transparent)}
+.res-card.c-gold:hover    {box-shadow:0 8px 30px rgba(240,180,41,0.1);border-color:rgba(240,180,41,0.22)}
+.res-card.c-gold::before  {background:radial-gradient(ellipse at 80% 0%,rgba(240,180,41,0.07),transparent)}
+.res-card.c-blue:hover    {box-shadow:0 8px 30px rgba(96,165,250,0.1);border-color:rgba(96,165,250,0.22)}
+.res-card.c-blue::before  {background:radial-gradient(ellipse at 80% 0%,rgba(96,165,250,0.07),transparent)}
+.res-card.c-violet:hover  {box-shadow:0 8px 30px rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.22)}
+.res-card.c-violet::before{background:radial-gradient(ellipse at 80% 0%,rgba(167,139,250,0.07),transparent)}
+.res-card.c-red:hover     {box-shadow:0 8px 30px rgba(244,63,94,0.1);border-color:rgba(244,63,94,0.22)}
+.res-card.c-red::before   {background:radial-gradient(ellipse at 80% 0%,rgba(244,63,94,0.07),transparent)}
+.res-card.c-emerald:hover {box-shadow:0 8px 30px rgba(52,211,153,0.1);border-color:rgba(52,211,153,0.22)}
+.res-card.c-emerald::before{background:radial-gradient(ellipse at 80% 0%,rgba(52,211,153,0.07),transparent)}
+
+.res-icon{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
+}
+.res-icon.c-teal{background:rgba(0,212,184,0.12)}
+.res-icon.c-gold{background:rgba(240,180,41,0.12)}
+.res-icon.c-blue{background:rgba(96,165,250,0.12)}
+.res-icon.c-violet{background:rgba(167,139,250,0.12)}
+.res-icon.c-red{background:rgba(244,63,94,0.12)}
+.res-icon.c-emerald{background:rgba(52,211,153,0.12)}
+
+.res-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.res-title{font-size:14px;font-weight:700;letter-spacing:-0.2px;margin-bottom:4px}
+.res-sub{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.res-desc{font-size:12px;color:rgba(226,234,244,0.6);line-height:1.6;font-family:'DM Mono',monospace}
+.res-tag{
+  display:inline-block;font-size:10px;font-weight:600;
+  padding:3px 8px;border-radius:6px;margin-top:auto;align-self:flex-start;
+  font-family:'DM Mono',monospace;letter-spacing:0.3px;
+}
+.tag-free{background:rgba(0,212,184,0.1);color:var(--teal)}
+.tag-paid{background:rgba(240,180,41,0.1);color:var(--gold)}
+.tag-freemium{background:rgba(96,165,250,0.1);color:var(--blue)}
+.tag-trial{background:rgba(167,139,250,0.1);color:var(--violet)}
+
+.ext-arrow{
+  font-size:13px;color:var(--muted);flex-shrink:0;
+  transition:transform 0.2s,color 0.2s;
+}
+.res-card:hover .ext-arrow{transform:translate(3px,-3px);color:var(--teal)}
+
+/* ── FORMULA CARD ── */
+.formula-card{
+  background:rgba(0,212,184,0.04);border:1px solid rgba(0,212,184,0.12);border-radius:16px;
+  padding:24px;margin-bottom:32px;
+}
+.formula-card h3{font-size:14px;font-weight:700;margin-bottom:12px;color:var(--teal)}
+.formula{
+  font-family:'DM Mono',monospace;font-size:12px;
+  background:rgba(0,0,0,0.3);border-radius:10px;padding:16px;
+  color:rgba(226,234,244,0.85);line-height:2;
+  overflow-x:auto;white-space:pre;
+}
+.formula .var{color:var(--gold)}
+.formula .op{color:var(--teal)}
+.formula .comment{color:var(--muted)}
+
+/* ── DISCLAIMER ── */
+.disclaimer{
+  background:rgba(255,255,255,0.02);border:1px solid var(--border);
+  border-radius:12px;padding:16px 18px;margin-bottom:24px;
+  display:flex;gap:12px;align-items:flex-start;
+}
+.disclaimer-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.disclaimer p{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);line-height:1.7}
+.disclaimer span{color:var(--gold)}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:rgba(5,7,10,0.96);border-top:1px solid var(--border);
+  backdrop-filter:blur(20px);padding-bottom:var(--safe-bot);
+  display:flex;
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;padding:10px 6px 8px;
+  cursor:pointer;text-decoration:none;color:var(--muted);
+  font-size:10px;font-weight:700;font-family:'Syne',sans-serif;transition:color 0.2s;
+}
+.nav-item .ni{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;transition:background 0.2s,transform 0.2s}
+.nav-item.active{color:var(--teal)}
+.nav-item.active .ni{background:rgba(0,212,184,0.12);transform:translateY(-2px)}
+
+@keyframes fade-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.fu{animation:fade-up 0.5s ease forwards;opacity:0}
+.d1{animation-delay:.05s}.d2{animation-delay:.1s}.d3{animation-delay:.15s}.d4{animation-delay:.2s}
+
+@media(min-width:768px){body{padding-bottom:0}.bottom-nav{display:none}}
+</style>
+</head>
+<body>
+<div class="bg-field"></div>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <a href="index.html" class="nav-logo">
+    <div class="mark">R</div>
+    <div class="name">Ri<span>bhi</span></div>
+  </a>
+  <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:5px 12px">
+    RESOURCES
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- HERO -->
+  <div class="hero fu d1">
+    <div class="hero-badge">🔗 Curated Stack</div>
+    <h1>Tools for <span>Serious Sellers</span></h1>
+    <p>A hand-picked selection of platforms, analytics tools, and learning resources to scale your e-commerce operation.</p>
+  </div>
+
+  <!-- MATH REFERENCE -->
+  <div class="fu d2">
+    <div class="sec-title">P(q) FORMULA REFERENCE</div>
+    <div class="formula-card">
+      <h3>The Profit Function</h3>
+      <pre class="formula"><span class="comment">// Net Profit over a batch of q units</span>
+<span class="var">P</span>(<span class="var">q</span>) <span class="op">=</span> [<span class="var">q</span> <span class="op">·</span> (1 <span class="op">−</span> <span class="var">r</span>) <span class="op">·</span> <span class="var">s</span>]          <span class="comment">// Revenue from sold units</span>
+     <span class="op">−</span> [<span class="var">q</span> <span class="op">·</span> <span class="var">c</span>]                    <span class="comment">// Total purchase cost</span>
+     <span class="op">−</span> [<span class="var">q</span> <span class="op">·</span> (1 <span class="op">−</span> <span class="var">r</span>) <span class="op">·</span> <span class="var">a</span>]          <span class="comment">// Ad spend (CPA × conversions)</span>
+     <span class="op">−</span> [<span class="var">q</span> <span class="op">·</span> <span class="var">r</span> <span class="op">·</span> <span class="var">c</span><sub>ret</sub>]              <span class="comment">// Failed delivery cost</span>
+     <span class="op">−</span> Tax(<span class="var">s</span>, <span class="var">q</span>, <span class="var">r</span>)               <span class="comment">// Tax on net revenue</span>
+     <span class="op">−</span> <span class="var">F</span>                          <span class="comment">// Fixed monthly costs</span>
+
+<span class="comment">// Break-Even Quantity</span>
+<span class="var">BEQ</span> <span class="op">=</span> <span class="var">F</span> <span class="op">÷</span> (<span class="var">s</span><sub>net</sub> <span class="op">−</span> <span class="var">vc</span>)            <span class="comment">// F / contribution per unit</span></pre>
+    </div>
+  </div>
+
+  <!-- E-COMMERCE PLATFORMS -->
+  <div class="fu d2">
+    <div class="sec-title">E-COMMERCE PLATFORMS</div>
+    <div class="resources-grid">
+
+      <a href="https://www.shopify.com" target="_blank" rel="noopener noreferrer" class="res-card c-teal">
+        <div class="res-header">
+          <div class="res-icon c-teal">🛍️</div>
+          <span class="ext-arrow">↗</span>
+        </div>
+        <div>
+          <div class="res-title">Shopify</div>
+          <div class="res-sub">shopify.com</div>
+        </div>
+        <div class="res-desc">The most complete e-commerce platform. Built-in analytics, abandoned cart, multi-currency.</div>
+        <span class="res-tag tag-paid">From $29/mo</span>
+      </a>
+
+      <a href="https://woocommerce.com" target="_blank" rel="noopener noreferrer" class="res-card c-blue">
+        <div class="res-header">
+          <div class="res-icon c-blue">🔷</div>
+          <span class="ext-arrow">↗</span>
+        </div>
+        <div>
+          <div class="res-title">WooCommerce</div>
+          <div class="res-sub">woocommerce.com</div>
+        </div>
+        <div class="res-desc">Open-source WordPress plugin. Full ownership, infinite customization, no platform fees.</div>
+        <span class="res-tag tag-free">Free (self-hosted)</span>
+      </a>
+
+      <a href="https://www.wix.com/ecommerce/website" target="_blank" rel="noopener noreferrer" class="res-card c-gold">
+        <div class="res-header">
+          <div class="res-icon c-gold">🌟</div>
+          <span class="ext-arrow">↗</span>
+        </div>
+        <div>
+          <div class="res-title">Wix eCommerce</div>
+          <div class="res-sub">wix.com</div>
+        </div>
+        <div class="res-desc">Drag-and-drop store builder. Quick launch for non-technical sellers. Good for small catalogs.</div>
+        <span class="res-tag tag-freemium">Freemium</span>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- ANALYTICS & TRACKING -->
+  <div class="fu d3">
+    <div class="sec-title">ANALYTICS & PERFORMANCE</div>
+    <div class="resources-grid">
+
+      <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer" class="res-card c-blue">
+        <div class="res-header">
+          <div class="res-icon c-blue">📊</div>
+          <span class="ext-arrow">↗</span>
+        </div>
+        <div>
+          <div class="res-title">Google Analytics 4</div>
+          <div class="res-sub">analytics.google.com</div>
+        </div>
+        <div class="res-desc">Industry-standard web analytics. Track conversions, user journeys, revenue attribution.</div>
+        <span class="res-tag tag-free">Free</span>
+      </a>
+
+      <a href="https://www.hotjar.com" target="_blank" rel="noopener noreferrer" class="res-card c-red">
+        <div class="res-header">
+          <div class="res-icon c-red">🔥</div>
+          <span class="ext-arrow">↗</span>
+        </div>
+        <div>
+          <div class="res-title">Hotjar</div>
+          <div class="res-sub">hotjar.com</div>
+        </div>
+        <div class="res-desc">Heatmaps, session recordings, and conversion funnels. Understand where customers drop off.</div>
+        <span class="res-tag tag-freemium">Freemium</span>
+      </a>
+
+      <a href="https://triplewhale.com" target="_blank" rel="noopener noreferrer" class="res-card c-violet">
+        <div class="res-header">
+          <div class="res-icon c-violet">🐋</div>
+          <span class="ext-arrow">↗</span>
+        </div>
+        <div>
+          <div class="res-title">Triple Whale</div>
+          <div class="res-sub">triplewhale.com</div>
+        </div>
+        <div class="res-desc">E-commerce attribution and profit dashboards. True ROAS across Meta, Google, TikTok.</div>
+        <span class="res-tag tag-paid">From $129/mo</span>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- AD PLATFORMS -->
+  <div class="fu d3">
+    <div class="sec-title">PAID ADVERTISING</div>
+    <div class="resources-grid">
+
+      <a href="https://business.facebook.com" target="_blank" rel="noopener noreferrer" class="res-card c-blue">
+        <div class="res-header">
+          <div class="res-icon c-blue">📣</div>
+          <span class="ext-arrow">↗</span>
+        </div>
+        <div>
+          <div class="res-title">Meta Ads Manager</div>
+          <div class="res-sub">business.facebook.com</div>
+        </div>
+        <div class="res-desc">Facebook & Instagram advertising. Best for B2C product discovery and retargeting.</div>
+        <span class="res-tag tag-free">Free (pay per click)</span>
+      </a>
+
+      <a href="https://ads.tiktok.com" target="_blank" rel="noopener noreferrer" class="res-card c-red">
+        <div class="res-header">
+          <div class="res-icon c-red">🎵</div>
+          <span class="ext-arrow">↗</span>
+        </div>
+        <div>
+          <div class="res-title">TikTok Ads</div>
+          <div class="res-sub">ads.tiktok.com</div>
+        </div>
+        <div class="res-desc">Viral-native ad formats. Excellent for younger demographics and impulse-buy products.</div>
+        <span class="res-tag tag-free">Free (pay per click)</span>
+      </a>
+
+      <a href="https://ads.google.com" target="_blank" rel="noopener noreferrer" class="res-card c-emerald">
+        <div class="res-header">
+          <div class="res-icon c-emerald">🔍</div>
+          <span class="ext-arrow">↗</span>
+        </div>
+        <div>
+          <div class="res-title">Google Ads</div>
+          <div class="res-sub">ads.google.com</div>
+        </div>
+        <div class="res-desc">Search & Shopping campaigns. High-intent buyers. Best ROAS for established products.</div>
+        <span class="res-tag tag-free">Free (pay per click)</span>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- OPERATIONS & FULFILMENT -->
+  <div class="fu d4">
+    <div class="sec-title">OPERATIONS & FULFILMENT</div>
+    <div class="resources-grid">
+
+      <a href="https://www.shipbob.com" target="_blank" rel="noopener noreferrer" class="res-card c-teal">
+        <div class="res-header">
+          <div class="res-icon c-teal">📦</div>
+          <span class="ext-arrow">↗</span>
+        </div>
+        <div>
+          <div class="res-title">ShipBob</div>
+          <div class="res-sub">shipbob.com</div>
+        </div>
+        <div class="res-desc">3PL fulfilment with warehouses in US, UK, EU. Shopify integration, 2-day delivery.</div>
+        <span class="res-tag tag-paid">Quote-based</span>
+      </a>
+
+      <a href="https://www.easyship.com" target="_blank" rel="noopener noreferrer" class="res-card c-gold">
+        <div class="res-header">
+          <div class="res-icon c-gold">✈️</div>
+          <span class="ext-arrow">↗</span>
+        </div>
+        <div>
+          <div class="res-title">Easyship</div>
+          <div class="res-sub">easyship.com</div>
+        </div>
+        <div class="res-desc">Compare 250+ couriers instantly. Automated customs, DDP, real-time tracking.</div>
+        <span class="res-tag tag-freemium">Free up to 50 shipments</span>
+      </a>
+
+      <a href="https://www.gorgias.com" target="_blank" rel="noopener noreferrer" class="res-card c-violet">
+        <div class="res-header">
+          <div class="res-icon c-violet">💬</div>
+          <span class="ext-arrow">↗</span>
+        </div>
+        <div>
+          <div class="res-title">Gorgias</div>
+          <div class="res-sub">gorgias.com</div>
+        </div>
+        <div class="res-desc">Customer service helpdesk built for e-commerce. Integrates with Shopify, WooCommerce.</div>
+        <span class="res-tag tag-paid">From $10/mo</span>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- PRODUCT RESEARCH -->
+  <div class="fu d4">
+    <div class="sec-title">PRODUCT RESEARCH</div>
+    <div class="resources-grid">
+
+      <a href="https://www.jungle-scout.com" target="_blank" rel="noopener noreferrer" class="res-card c-emerald">
+        <div class="res-header">
+          <div class="res-icon c-emerald">🌿</div>
+          <span class="ext-arrow">↗</span>
+        </div>
+        <div>
+          <div class="res-title">Jungle Scout</div>
+          <div class="res-sub">jungle-scout.com</div>
+        </div>
+        <div class="res-desc">Amazon product research. Revenue estimators, keyword trends, supplier database.</div>
+        <span class="res-tag tag-paid">From $49/mo</span>
+      </a>
+
+      <a href="https://trends.google.com" target="_blank" rel="noopener noreferrer" class="res-card c-blue">
+        <div class="res-header">
+          <div class="res-icon c-blue">📈</div>
+          <span class="ext-arrow">↗</span>
+        </div>
+        <div>
+          <div class="res-title">Google Trends</div>
+          <div class="res-sub">trends.google.com</div>
+        </div>
+        <div class="res-desc">Free demand intelligence. Discover seasonal products, compare markets, validate niches.</div>
+        <span class="res-tag tag-free">Free</span>
+      </a>
+
+      <a href="https://www.minea.com" target="_blank" rel="noopener noreferrer" class="res-card c-red">
+        <div class="res-header">
+          <div class="res-icon c-red">🔎</div>
+          <span class="ext-arrow">↗</span>
+        </div>
+        <div>
+          <div class="res-title">Minea</div>
+          <div class="res-sub">minea.com</div>
+        </div>
+        <div class="res-desc">Winning product spy tool. Tracks viral ads across Meta, TikTok, Pinterest in real time.</div>
+        <span class="res-tag tag-trial">Free trial</span>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- DISCLAIMER -->
+  <div class="disclaimer fu d4">
+    <div class="disclaimer-icon">ℹ️</div>
+    <p>All external links above are <span>editorially curated</span> — Ribhi has no paid partnerships or affiliate relationships with any of the listed services. Pricing and availability may change; always verify on the provider's official website.</p>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <a href="index.html" class="nav-item">
+    <div class="ni">📊</div><span>Dashboard</span>
+  </a>
+  <a href="settings.html" class="nav-item">
+    <div class="ni">⚙️</div><span>Settings</span>
+  </a>
+  <a href="affiliate.html" class="nav-item active">
+    <div class="ni">🔗</div><span>Resources</span>
+  </a>
+</nav>
+
+</body>
+</html>
