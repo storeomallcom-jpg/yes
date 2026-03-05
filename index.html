@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Ribhi — Profit Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:      #05070A;
+  --bg2:     #0D1117;
+  --bg3:     #131920;
+  --teal:    #00D4B8;
+  --teal-d:  #009E8E;
+  --gold:    #F0B429;
+  --gold-d:  #C4901E;
+  --red:     #F43F5E;
+  --blue:    #60A5FA;
+  --violet:  #A78BFA;
+  --text:    #E2EAF4;
+  --muted:   #5A6880;
+  --border:  rgba(255,255,255,0.06);
+  --glass:   rgba(13,17,23,0.85);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  font-family:'Syne',sans-serif;
+  background:var(--bg); color:var(--text);
+  min-height:100vh; min-height:100dvh;
+  overflow-x:hidden;
+  padding-bottom:calc(72px + var(--safe-bot));
+}
+
+/* ── BACKGROUND ── */
+.bg-field{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    linear-gradient(rgba(0,212,184,0.022) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,184,0.022) 1px,transparent 1px);
+  background-size:60px 60px;
+}
+.bg-field::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 55% 35% at 5% 5%, rgba(0,212,184,0.09) 0%,transparent 60%),
+    radial-gradient(ellipse 45% 40% at 95% 95%, rgba(240,180,41,0.07) 0%,transparent 55%),
+    radial-gradient(ellipse 35% 50% at 50% 50%, rgba(244,63,94,0.03) 0%,transparent 60%);
+}
+
+/* ── TOP BAR ── */
+.top-bar{
+  position:sticky;top:0;z-index:100;
+  background:rgba(5,7,10,0.94);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(16px);
+  padding:13px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
+.nav-logo .mark{
+  width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,var(--teal),var(--gold));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:14px;color:#05070A;
+}
+.nav-logo .name{font-size:18px;font-weight:800;letter-spacing:-0.4px}
+.nav-logo .name span{color:var(--teal)}
+
+.top-right{display:flex;align-items:center;gap:10px}
+.user-chip{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);border-radius:20px;
+  padding:5px 12px 5px 6px;
+  font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);
+  cursor:pointer;transition:border-color 0.2s;
+}
+.user-chip:hover{border-color:rgba(255,255,255,0.15)}
+.avatar{
+  width:24px;height:24px;border-radius:50%;
+  background:linear-gradient(135deg,var(--teal),var(--gold));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:10px;color:#05070A;
+}
+
+/* ── MAIN GRID ── */
+.main{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:24px 20px}
+
+/* ── SECTION TITLES ── */
+.sec-title{
+  font-size:11px;font-weight:600;color:var(--muted);letter-spacing:1.5px;
+  text-transform:uppercase;font-family:'DM Mono',monospace;margin-bottom:14px;
+}
+
+/* ── GLASS CARD ── */
+.card{
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:18px;backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+}
+
+/* ── KPI CARDS ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.kpi-grid{grid-template-columns:repeat(2,1fr);gap:10px}}
+
+.kpi{padding:18px 16px;position:relative;overflow:hidden;border-radius:18px}
+.kpi::before{content:'';position:absolute;inset:0;border-radius:18px;opacity:0.05}
+.kpi.k-teal::before{background:var(--teal)}
+.kpi.k-gold::before{background:var(--gold)}
+.kpi.k-red::before{background:var(--red)}
+.kpi.k-blue::before{background:var(--blue)}
+.kpi-icon{
+  width:34px;height:34px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:12px;
+}
+.kpi-icon.k-teal{background:rgba(0,212,184,0.12)}
+.kpi-icon.k-gold{background:rgba(240,180,41,0.12)}
+.kpi-icon.k-red{background:rgba(244,63,94,0.12)}
+.kpi-icon.k-blue{background:rgba(96,165,250,0.12)}
+.kpi-val{font-size:1.7rem;font-weight:800;line-height:1.1;letter-spacing:-1px;font-family:'DM Mono',monospace}
+.kpi-lbl{font-size:11px;color:var(--muted);margin-top:5px;font-family:'DM Mono',monospace}
+.kpi-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-top:4px}
+
+/* ── TWO-COL LAYOUT ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px}
+@media(max-width:700px){.two-col{grid-template-columns:1fr}}
+
+/* ── INPUTS ── */
+.field-label{
+  display:block;font-size:10px;font-weight:600;color:var(--muted);
+  margin-bottom:6px;letter-spacing:0.6px;text-transform:uppercase;
+  font-family:'DM Mono',monospace;
+}
+.field{
+  width:100%;background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.07);border-radius:9px;
+  padding:11px 13px;color:var(--text);
+  font-family:'DM Mono',monospace;font-size:13px;
+  outline:none;transition:border-color 0.2s,box-shadow 0.2s;
+  -webkit-appearance:none;
+}
+.field:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(0,212,184,0.1)}
+.field::placeholder{color:var(--muted);font-size:12px}
+select.field{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235A6880' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
+}
+select.field option{background:#131920}
+
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.field-wrap{margin-bottom:14px}
+.field-wrap:last-child{margin-bottom:0}
+
+.addon-wrap{position:relative}
+.addon-wrap .field{padding-right:42px}
+.addon-wrap .addon{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);pointer-events:none;
+}
+
+/* ── RANGE SLIDER ── */
+input[type=range]{
+  -webkit-appearance:none;width:100%;height:4px;
+  border-radius:2px;background:rgba(255,255,255,0.08);outline:none;cursor:pointer;
+  margin-top:8px;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--teal);
+  box-shadow:0 0 8px rgba(0,212,184,0.5);
+}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border:none;border-radius:50%;background:var(--teal)}
+
+/* ── TABS ── */
+.tab-row{display:flex;gap:5px;background:rgba(255,255,255,0.03);border-radius:10px;padding:3px}
+.tab-btn{
+  flex:1;padding:8px 6px;border-radius:7px;
+  font-family:'DM Mono',monospace;font-size:11px;font-weight:500;
+  cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all 0.2s;
+}
+.tab-btn.active{background:rgba(0,212,184,0.12);color:var(--teal);border:1px solid rgba(0,212,184,0.2)}
+
+/* ── BUTTONS ── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:13px 22px;border-radius:11px;
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:700;
+  border:none;cursor:pointer;
+  transition:transform 0.2s,box-shadow 0.2s,opacity 0.2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:active{transform:scale(0.97)}
+.btn:disabled{opacity:0.45;pointer-events:none}
+.btn-full{width:100%}
+
+.btn-teal{
+  background:linear-gradient(135deg,var(--teal),var(--teal-d));
+  color:#05070A;font-weight:800;
+  box-shadow:0 4px 18px rgba(0,212,184,0.22);
+}
+.btn-teal:hover{box-shadow:0 8px 28px rgba(0,212,184,0.38);transform:translateY(-1px)}
+
+.btn-gold{
+  background:linear-gradient(135deg,var(--gold),var(--gold-d));
+  color:#05070A;font-weight:800;
+  box-shadow:0 4px 18px rgba(240,180,41,0.22);
+}
+.btn-gold:hover{box-shadow:0 8px 28px rgba(240,180,41,0.38);transform:translateY(-1px)}
+
+.btn-ghost{
+  background:transparent;border:1px solid var(--border);color:var(--muted);font-size:13px;
+}
+.btn-ghost:hover{border-color:rgba(255,255,255,0.15);color:var(--text)}
+
+/* ── RESULT ROWS ── */
+.result-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:11px 0;border-bottom:1px solid var(--border);
+}
+.result-row:last-child{border-bottom:none;padding-top:14px}
+.result-row .lbl{font-size:12px;color:rgba(226,234,244,0.6);font-family:'DM Mono',monospace}
+.result-row .val{font-size:13px;font-weight:600;font-family:'DM Mono',monospace}
+
+/* ── BREAK-EVEN BAR ── */
+.bep-bar{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-top:8px}
+.bep-fill{height:100%;border-radius:3px;transition:width 1s cubic-bezier(.34,1.4,.64,1)}
+
+/* ── SENSITIVITY TABLE ── */
+.sens-table{width:100%;border-collapse:collapse;font-family:'DM Mono',monospace;font-size:11px}
+.sens-table th{
+  text-align:left;padding:8px 10px;color:var(--muted);
+  border-bottom:1px solid var(--border);font-weight:500;letter-spacing:0.3px;
+}
+.sens-table td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,0.04)}
+.sens-table tr:last-child td{border-bottom:none}
+.delta-pill{
+  display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;
+}
+.delta-pos{background:rgba(0,212,184,0.12);color:var(--teal)}
+.delta-neg{background:rgba(244,63,94,0.12);color:var(--red)}
+
+/* ── HEALTH INDICATOR ── */
+.health-ring{
+  width:52px;height:52px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;font-family:'DM Mono',monospace;
+  border:3px solid;
+}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:rgba(5,7,10,0.96);border-top:1px solid var(--border);
+  backdrop-filter:blur(20px);padding-bottom:var(--safe-bot);
+  display:flex;
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;padding:10px 6px 8px;
+  cursor:pointer;text-decoration:none;color:var(--muted);
+  font-size:10px;font-weight:700;font-family:'Syne',sans-serif;transition:color 0.2s;
+}
+.nav-item .ni{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;transition:background 0.2s,transform 0.2s}
+.nav-item.active{color:var(--teal)}
+.nav-item.active .ni{background:rgba(0,212,184,0.12);transform:translateY(-2px)}
+button.nav-item{background:none;border:none;font-family:'Syne',sans-serif}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:calc(85px + var(--safe-bot));left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:var(--bg3);border:1px solid rgba(0,212,184,0.25);
+  border-radius:10px;padding:10px 20px;
+  font-size:12px;font-weight:600;z-index:1000;
+  white-space:nowrap;opacity:0;pointer-events:none;
+  transition:all 0.35s cubic-bezier(.34,1.4,.64,1);
+  font-family:'DM Mono',monospace;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.err{border-color:rgba(244,63,94,0.35);color:var(--red)}
+
+/* ── SPINNER ── */
+.spinner{width:16px;height:16px;border:2px solid rgba(5,7,10,0.4);border-top-color:#05070A;border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── ANIMATIONS ── */
+@keyframes fade-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.fu{opacity:0;animation:fade-up 0.5s ease forwards}
+.d1{animation-delay:.05s}.d2{animation-delay:.1s}.d3{animation-delay:.15s}
+.d4{animation-delay:.2s}.d5{animation-delay:.25s}.d6{animation-delay:.3s}
+
+/* ── VIEWS ── */
+.view{display:none}.view.active{display:block}
+
+/* ── RESPONSIVE ── */
+@media(min-width:768px){body{padding-bottom:0}.bottom-nav{display:none}}
+@media(max-width:480px){
+  .kpi-val{font-size:1.4rem}
+  .field-row{grid-template-columns:1fr}
+}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:var(--border);margin:4px 0}
+
+/* ── NUMBER HIGHLIGHT ── */
+.mono{font-family:'DM Mono',monospace}
+.c-teal{color:var(--teal)} .c-gold{color:var(--gold)} .c-red{color:var(--red)} .c-blue{color:var(--blue)}
+</style>
+</head>
+<body>
+<div class="bg-field"></div>
+<div id="toast"></div>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+  <a href="index.html" class="nav-logo">
+    <div class="mark">R</div>
+    <div class="name">Ri<span>bhi</span></div>
+  </a>
+  <div class="top-right">
+    <div class="user-chip" id="userChip" onclick="toggleUserMenu()">
+      <div class="avatar" id="navAvatar">?</div>
+      <span id="navName">Sign in</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ MAIN ════════ -->
+<div class="main">
+
+  <!-- ── DASHBOARD VIEW ── -->
+  <div class="view active" id="dashView">
+
+    <!-- Greeting + BEP pill -->
+    <div class="fu d1" style="margin-bottom:22px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:0.5px;margin-bottom:3px">OVERVIEW</div>
+        <h1 style="font-size:26px;font-weight:800;letter-spacing:-0.5px" id="greeting">Profit Dashboard</h1>
+      </div>
+      <div id="bepPill" style="display:none;background:rgba(240,180,41,0.1);border:1px solid rgba(240,180,41,0.2);border-radius:8px;padding:6px 12px;font-family:'DM Mono',monospace;font-size:11px;color:var(--gold)">
+        BEP: <span id="bepVal">—</span> units
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid fu d2">
+      <div class="card kpi k-teal">
+        <div class="kpi-icon k-teal">💰</div>
+        <div class="kpi-val c-teal" id="kNetProfit">—</div>
+        <div class="kpi-lbl">Net Profit</div>
+        <div class="kpi-badge" id="kProfitBadge" style="background:rgba(0,212,184,0.1);color:var(--muted)">run calc first</div>
+      </div>
+      <div class="card kpi k-gold">
+        <div class="kpi-icon k-gold">📈</div>
+        <div class="kpi-val c-gold" id="kROI">—</div>
+        <div class="kpi-lbl">Return on Investment</div>
+        <div class="kpi-badge" id="kRoiBadge" style="background:rgba(240,180,41,0.08);color:var(--muted)">—</div>
+      </div>
+      <div class="card kpi k-blue">
+        <div class="kpi-icon k-blue">🎯</div>
+        <div class="kpi-val c-blue" id="kMargin">—</div>
+        <div class="kpi-lbl">Profit Margin</div>
+        <div class="kpi-badge" style="background:rgba(96,165,250,0.08);color:var(--muted)" id="kMarginBadge">—</div>
+      </div>
+      <div class="card kpi k-red">
+        <div class="kpi-icon k-red">🔄</div>
+        <div class="kpi-val" style="color:var(--violet)" id="kBEP">—</div>
+        <div class="kpi-lbl">Break-Even Units</div>
+        <div class="kpi-badge" style="background:rgba(167,139,250,0.08);color:var(--muted)" id="kBepBadge">—</div>
+      </div>
+    </div>
+
+    <!-- Last Calculation Summary -->
+    <div id="dashSummary" style="display:none" class="fu d3">
+      <div class="sec-title">LAST CALCULATION — <span id="dashProdName" style="color:var(--teal)">—</span></div>
+      <div class="two-col" style="margin-bottom:22px">
+        <!-- Breakdown -->
+        <div class="card" style="padding:20px">
+          <div style="font-size:12px;font-weight:700;margin-bottom:14px;color:rgba(226,234,244,0.8)">Cost Breakdown</div>
+          <div id="dashBreakdown"></div>
+        </div>
+        <!-- Health + BEP -->
+        <div class="card" style="padding:20px">
+          <div style="font-size:12px;font-weight:700;margin-bottom:16px;color:rgba(226,234,244,0.8)">Business Health</div>
+          <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
+            <div class="health-ring" id="healthRing">—%</div>
+            <div>
+              <div style="font-size:13px;font-weight:700" id="healthLabel">—</div>
+              <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:2px">Profit Margin Score</div>
+            </div>
+          </div>
+          <div class="bep-bar"><div class="bep-fill" id="bepBarFill" style="width:0%"></div></div>
+          <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:5px">
+            <span>0 units</span>
+            <span>BEP</span>
+            <span id="bepTarget">—</span>
+          </div>
+        </div>
+      </div>
+      <!-- Sensitivity Analysis -->
+      <div class="sec-title">SENSITIVITY ANALYSIS — 5% CHANGE IMPACT</div>
+      <div class="card" style="padding:20px;margin-bottom:22px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+          <div style="font-size:12px;font-weight:600;color:rgba(226,234,244,0.7)">How a 5% shift in key variables impacts your bottom line:</div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="sens-table">
+            <thead>
+              <tr>
+                <th>Variable</th>
+                <th>Base Value</th>
+                <th>+5% Impact</th>
+                <th>−5% Impact</th>
+                <th>Sensitivity</th>
+              </tr>
+            </thead>
+            <tbody id="sensTableBody"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:14px;height:200px;position:relative">
+          <canvas id="sensChart"></canvas>
+        </div>
+      </div>
+      <!-- Donut Chart -->
+      <div class="sec-title">COST DISTRIBUTION</div>
+      <div class="card" style="padding:20px;margin-bottom:22px">
+        <div style="height:220px;position:relative">
+          <canvas id="donutChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="emptyState" class="card fu d3" style="padding:40px;text-align:center">
+      <div style="font-size:40px;margin-bottom:14px">📐</div>
+      <div style="font-size:17px;font-weight:800;margin-bottom:8px">No calculations yet</div>
+      <div style="font-size:12px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:24px;line-height:1.7">
+        Enter product variables and run P(q) to see<br/>break-even, ROI, and sensitivity analysis.
+      </div>
+      <button class="btn btn-teal" onclick="showCalc()" style="margin:0 auto;max-width:220px">Open Calculator →</button>
+    </div>
+
+  </div>
+
+  <!-- ── CALCULATOR VIEW ── -->
+  <div class="view" id="calcView">
+
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+      <button onclick="showDash()" class="btn btn-ghost" style="padding:10px 14px;gap:5px">← Back</button>
+      <div>
+        <h2 style="font-size:20px;font-weight:800;letter-spacing:-0.3px">Profit Calculator</h2>
+        <div style="font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-top:1px">P(q) = [(q·(1−r)·s)] − [q·c] − [q·a] − [q·r·c_ret] − Tax(s)</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <!-- LEFT: Inputs -->
+      <div>
+        <!-- Product -->
+        <div class="sec-title">PRODUCT VARIABLES</div>
+        <div class="card" style="padding:20px;margin-bottom:18px">
+          <div class="field-wrap">
+            <label class="field-label">Product Name</label>
+            <input type="text" id="cName" class="field" placeholder="e.g. Winter Jacket"/>
+          </div>
+          <div class="field-row">
+            <div class="field-wrap">
+              <label class="field-label">Unit Cost (c) <span id="lCur1" class="c-teal">$</span></label>
+              <input type="number" id="cCost" class="field" value="20" min="0" step="0.5" oninput="liveCalc()" inputmode="decimal"/>
+            </div>
+            <div class="field-wrap">
+              <label class="field-label">Selling Price (s) <span id="lCur2" class="c-teal">$</span></label>
+              <input type="number" id="cPrice" class="field" value="49" min="0" step="0.5" oninput="liveCalc()" inputmode="decimal"/>
+            </div>
+          </div>
+          <div class="field-wrap">
+            <label class="field-label">Batch Quantity (q)</label>
+            <input type="number" id="cQty" class="field" value="200" min="1" oninput="liveCalc()" inputmode="numeric"/>
+          </div>
+        </div>
+
+        <!-- Costs -->
+        <div class="sec-title">OPERATIONAL COSTS / ORDER</div>
+        <div class="card" style="padding:20px;margin-bottom:18px">
+          <div class="field-row">
+            <div class="field-wrap">
+              <label class="field-label">Ad Spend / CPA (a) <span id="lCur3" class="c-teal">$</span></label>
+              <input type="number" id="cAds" class="field" value="8" min="0" step="0.5" oninput="liveCalc()" inputmode="decimal"/>
+            </div>
+            <div class="field-wrap">
+              <label class="field-label">Shipping <span id="lCur4" class="c-teal">$</span></label>
+              <input type="number" id="cShip" class="field" value="5" min="0" step="0.5" oninput="liveCalc()" inputmode="decimal"/>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-wrap">
+              <label class="field-label">Packaging <span id="lCur5" class="c-teal">$</span></label>
+              <input type="number" id="cPack" class="field" value="1.5" min="0" step="0.5" oninput="liveCalc()" inputmode="decimal"/>
+            </div>
+            <div class="field-wrap">
+              <label class="field-label">Failed Delivery Cost (c_ret) <span id="lCur6" class="c-teal">$</span></label>
+              <input type="number" id="cRetCost" class="field" value="3" min="0" step="0.5" oninput="liveCalc()" inputmode="decimal"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tax & Refund -->
+        <div class="sec-title">TAX & REFUND RATE</div>
+        <div class="card" style="padding:20px;margin-bottom:18px">
+          <div class="field-wrap">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <label class="field-label" style="margin:0">Refund Rate (r)</label>
+              <span class="mono" id="cRetLbl" style="font-size:12px;font-weight:600;color:var(--red)">10%</span>
+            </div>
+            <input type="range" id="cRet" min="0" max="70" value="10" step="1" oninput="onRetChange(this.value)"/>
+            <div style="display:flex;justify-content:space-between;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);margin-top:5px">
+              <span>✅ 0–10% great</span><span>⚠️ 10–30% avg</span><span>🔴 30%+ high</span>
+            </div>
+          </div>
+          <div class="field-wrap" style="margin-top:4px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <label class="field-label" style="margin:0">Tax Rate</label>
+              <span class="mono c-blue" id="cTaxLbl" style="font-size:12px;font-weight:600">20%</span>
+            </div>
+            <div class="tab-row" id="taxRow">
+              <button class="tab-btn" onclick="setTax(0,this)">0%</button>
+              <button class="tab-btn" onclick="setTax(7.5,this)">7.5%</button>
+              <button class="tab-btn" onclick="setTax(10,this)">10%</button>
+              <button class="tab-btn" onclick="setTax(14,this)">14%</button>
+              <button class="tab-btn active" onclick="setTax(20,this)">20%</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Live Preview + Results -->
+      <div>
+        <!-- Live Preview -->
+        <div class="sec-title">LIVE PREVIEW</div>
+        <div class="card" style="padding:20px;margin-bottom:18px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center">
+            <div style="padding:12px;background:rgba(255,255,255,0.02);border-radius:9px">
+              <div style="font-size:9px;color:var(--muted);margin-bottom:6px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.5px">Unit Cost</div>
+              <div class="mono" style="font-size:15px;font-weight:600" id="lpUnitCost">—</div>
+            </div>
+            <div style="padding:12px;background:rgba(0,212,184,0.05);border:1px solid rgba(0,212,184,0.12);border-radius:9px">
+              <div style="font-size:9px;color:var(--muted);margin-bottom:6px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.5px">Gross Margin</div>
+              <div class="mono c-teal" style="font-size:15px;font-weight:700" id="lpMargin">—</div>
+            </div>
+            <div style="padding:12px;background:rgba(255,255,255,0.02);border-radius:9px">
+              <div style="font-size:9px;color:var(--muted);margin-bottom:6px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.5px">Net/Unit</div>
+              <div class="mono c-gold" style="font-size:15px;font-weight:700" id="lpNetUnit">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" style="display:none">
+          <div class="sec-title">P(q) RESULT</div>
+          <div class="card" style="padding:20px;margin-bottom:18px">
+            <!-- Price Recommendation -->
+            <div style="background:rgba(240,180,41,0.07);border:1px solid rgba(240,180,41,0.18);border-radius:10px;padding:14px;text-align:center;margin-bottom:14px">
+              <div style="font-size:10px;color:var(--muted);margin-bottom:4px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.5px">Minimum Viable Price</div>
+              <div class="mono c-gold" style="font-size:1.5rem;font-weight:800" id="rMinPrice">—</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:2px;font-family:'DM Mono',monospace">to achieve target margin</div>
+            </div>
+            <div id="rBreakdown"></div>
+          </div>
+
+          <!-- Donut (inline) -->
+          <div class="sec-title">COST DISTRIBUTION</div>
+          <div class="card" style="padding:20px;margin-bottom:18px">
+            <div style="height:200px;position:relative">
+              <canvas id="calcDonut"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <button class="btn btn-gold btn-full" id="calcBtn" onclick="doCalculate()">
+          <span id="calcBtnLbl">Run P(q) Analysis</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- /main -->
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-item active" id="navDash" onclick="showDash()" style="background:none;border:none;font-family:'Syne',sans-serif">
+    <div class="ni">📊</div><span>Dashboard</span>
+  </button>
+  <button class="nav-item" id="navCalc" onclick="showCalc()" style="background:none;border:none;font-family:'Syne',sans-serif">
+    <div class="ni">🧮</div><span>Calculator</span>
+  </button>
+  <a href="settings.html" class="nav-item">
+    <div class="ni">⚙️</div><span>Settings</span>
+  </a>
+  <a href="affiliate.html" class="nav-item">
+    <div class="ni">🔗</div><span>Resources</span>
+  </a>
+</nav>
+
+<script>
+// ══════════ CONFIG ══════════
+const SUPABASE_URL  = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY';
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON, {
+  auth: { persistSession: true, autoRefreshToken: true }
+});
+
+// ══════════ STATE ══════════
+let currentUser    = null;
+let userProfile    = null;
+let calcResult     = null;
+let taxRate        = 20;
+let donutInst      = null;
+let calcDonutInst  = null;
+let sensChartInst  = null;
+const SYM = () => userProfile?.currency_symbol || '$';
+
+// ══════════ INIT ══════════
+document.addEventListener('DOMContentLoaded', () => {
+  loadOpDefaults();
+  sb.auth.onAuthStateChange(async (evt, session) => {
+    currentUser = session?.user || null;
+    if (currentUser) {
+      await fetchProfile();
+      updateAuthUI(true);
+      loadHistory();
+    } else {
+      updateAuthUI(false);
+    }
+  });
+  liveCalc();
+});
+
+function loadOpDefaults() {
+  const d = JSON.parse(localStorage.getItem('ribhi_op_defaults') || '{}');
+  if (d.ship)    document.getElementById('cShip').value    = d.ship;
+  if (d.pack)    document.getElementById('cPack').value    = d.pack;
+  if (d.mktg)    document.getElementById('cAds').value     = d.mktg;
+  if (d.retcost) document.getElementById('cRetCost').value = d.retcost;
+  if (d.tax) {
+    taxRate = d.tax;
+    document.getElementById('cTaxLbl').textContent = d.tax + '%';
+    document.querySelectorAll('#taxRow .tab-btn').forEach(b =>
+      b.classList.toggle('active', parseFloat(b.textContent) === d.tax));
+  }
+}
+
+async function fetchProfile() {
+  const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  if (data) {
+    userProfile = data;
+    taxRate     = data.default_tax_rate || taxRate;
+    document.getElementById('cTaxLbl').textContent = taxRate + '%';
+    document.querySelectorAll('#taxRow .tab-btn').forEach(b =>
+      b.classList.toggle('active', parseFloat(b.textContent) === taxRate));
+    updateCurrencyUI();
+  }
+}
+
+function updateCurrencyUI() {
+  const sym = SYM();
+  ['lCur1','lCur2','lCur3','lCur4','lCur5','lCur6'].forEach(id => {
+    document.getElementById(id).textContent = sym;
+  });
+}
+
+function updateAuthUI(loggedIn) {
+  const name = userProfile?.full_name || currentUser?.email?.split('@')[0] || '';
+  document.getElementById('navAvatar').textContent = loggedIn ? (name.charAt(0).toUpperCase() || '?') : '?';
+  document.getElementById('navName').textContent   = loggedIn ? name : 'Sign in';
+  if (!loggedIn) document.getElementById('greeting').textContent = 'Profit Dashboard';
+  else document.getElementById('greeting').textContent = 'Hey, ' + (name.split(' ')[0]) + ' 👋';
+  document.getElementById('userChip').onclick = loggedIn
+    ? () => { if(confirm('Sign out?')) doSignOut(); }
+    : () => window.location.href = 'registration.html';
+}
+
+async function loadHistory() {
+  const { data } = await sb.from('calculations')
+    .select('*').eq('user_id', currentUser.id)
+    .order('created_at', { ascending: false }).limit(1);
+  if (data && data.length > 0) {
+    const last = data[0];
+    if (last.payload) calcResult = last.payload;
+    renderDashResults(last.payload);
+  }
+}
+
+async function doSignOut() {
+  await sb.auth.signOut();
+  currentUser = null; userProfile = null;
+  updateAuthUI(false);
+  toast('Signed out');
+}
+
+// ══════════ VIEWS ══════════
+function showDash() {
+  document.getElementById('dashView').classList.add('active');
+  document.getElementById('calcView').classList.remove('active');
+  document.getElementById('navDash').classList.add('active');
+  document.getElementById('navCalc').classList.remove('active');
+}
+
+function showCalc() {
+  document.getElementById('dashView').classList.remove('active');
+  document.getElementById('calcView').classList.add('active');
+  document.getElementById('navCalc').classList.add('active');
+  document.getElementById('navDash').classList.remove('active');
+  liveCalc();
+}
+
+function toggleUserMenu() {
+  if (!currentUser) window.location.href = 'registration.html';
+}
+
+// ══════════ TAX / REFUND ══════════
+function setTax(v, btn) {
+  taxRate = v;
+  document.getElementById('cTaxLbl').textContent = v + '%';
+  document.querySelectorAll('#taxRow .tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  liveCalc();
+}
+
+function onRetChange(v) {
+  const lbl = document.getElementById('cRetLbl');
+  lbl.textContent = v + '%';
+  lbl.style.color = v < 10 ? 'var(--teal)' : v < 25 ? 'var(--gold)' : 'var(--red)';
+  liveCalc();
+}
+
+// ══════════ LIVE PREVIEW ══════════
+function liveCalc() {
+  const cost    = parseFloat(document.getElementById('cCost').value)    || 0;
+  const price   = parseFloat(document.getElementById('cPrice').value)   || 0;
+  const ads     = parseFloat(document.getElementById('cAds').value)     || 0;
+  const ship    = parseFloat(document.getElementById('cShip').value)    || 0;
+  const pack    = parseFloat(document.getElementById('cPack').value)    || 0;
+  const retCost = parseFloat(document.getElementById('cRetCost').value) || 0;
+  const refRate = parseFloat(document.getElementById('cRet').value)/100 || 0;
+  const tax     = taxRate / 100;
+  const sym     = SYM();
+
+  const unitCostTotal = cost + ads + ship + pack + (refRate * retCost);
+  const netRevUnit    = price * (1 - tax);
+  const grossMarginPct = price > 0 ? ((netRevUnit - unitCostTotal) / netRevUnit * 100) : 0;
+  const netPerUnit    = netRevUnit - unitCostTotal;
+
+  document.getElementById('lpUnitCost').textContent = sym + unitCostTotal.toFixed(2);
+  document.getElementById('lpMargin').textContent   = grossMarginPct.toFixed(1) + '%';
+  document.getElementById('lpMargin').style.color   = grossMarginPct >= 20 ? 'var(--teal)' : grossMarginPct >= 10 ? 'var(--gold)' : 'var(--red)';
+  document.getElementById('lpNetUnit').textContent  = (netPerUnit >= 0 ? sym : '-' + sym) + Math.abs(netPerUnit).toFixed(2);
+  document.getElementById('lpNetUnit').style.color  = netPerUnit >= 0 ? 'var(--gold)' : 'var(--red)';
+}
+
+// ══════════════════════════════════════
+// CORE MATH ENGINE  P(q)
+// ══════════════════════════════════════
+function computePQ(inputs) {
+  const { cost, price, qty, ads, ship, pack, retCost, refRate, taxPct, fixedCosts } = inputs;
+  const tax  = taxPct / 100;
+  const r    = refRate / 100;
+
+  const soldUnits   = qty * (1 - r);
+  const retUnits    = qty * r;
+
+  // Cost components (over full batch)
+  const totalGoods  = cost * qty;
+  const totalAds    = ads  * soldUnits;    // CPA only on conversions
+  const totalShip   = ship * qty;
+  const totalPack   = pack * qty;
+  const totalRet    = retCost * retUnits;
+  const totalVarCost = totalGoods + totalAds + totalShip + totalPack + totalRet;
+
+  // Revenue
+  const grossRev  = price * soldUnits;
+  const taxAmt    = grossRev * tax;
+  const netRev    = grossRev - taxAmt;
+
+  // Profit
+  const totalCosts   = totalVarCost + (fixedCosts || 0);
+  const netProfit    = netRev - totalCosts;
+  const profitMargin = netRev > 0 ? (netProfit / netRev) * 100 : 0;
+  const roi          = totalCosts > 0 ? (netProfit / totalCosts) * 100 : 0;
+
+  // Break-even quantity (variable costs only per unit, vs fixed costs)
+  const varCostPerUnit   = (totalVarCost / qty);
+  const netRevPerUnit    = price * (1 - r) * (1 - tax);
+  const contribPerUnit   = netRevPerUnit - varCostPerUnit;
+  const breakEvenQty     = contribPerUnit > 0
+    ? Math.ceil((fixedCosts || 0) / contribPerUnit)
+    : Infinity;
+
+  // Minimum viable price to break even (zero-profit)
+  const minPrice = contribPerUnit <= 0 || qty <= 0
+    ? varCostPerUnit / ((1 - r) * (1 - tax))
+    : price;
+
+  return {
+    soldUnits, retUnits,
+    totalGoods, totalAds, totalShip, totalPack, totalRet,
+    totalVarCost, taxAmt, netRev, grossRev,
+    totalCosts, netProfit, profitMargin, roi,
+    breakEvenQty, varCostPerUnit, contribPerUnit, minPrice,
+  };
+}
+
+// Sensitivity: compute profit when one variable changes by delta%
+function sensitivityDelta(inputs, variable, deltaPct) {
+  const modified = { ...inputs };
+  modified[variable] = inputs[variable] * (1 + deltaPct / 100);
+  const base  = computePQ(inputs);
+  const alt   = computePQ(modified);
+  return alt.netProfit - base.netProfit;
+}
+
+// ══════════ MAIN CALCULATE ══════════
+async function doCalculate() {
+  const btn  = document.getElementById('calcBtn');
+  btn.disabled = true;
+  document.getElementById('calcBtnLbl').innerHTML = '<div class="spinner"></div>';
+
+  const inputs = {
+    cost:       parseFloat(document.getElementById('cCost').value)    || 0,
+    price:      parseFloat(document.getElementById('cPrice').value)   || 0,
+    qty:        parseInt(document.getElementById('cQty').value)       || 1,
+    ads:        parseFloat(document.getElementById('cAds').value)     || 0,
+    ship:       parseFloat(document.getElementById('cShip').value)    || 0,
+    pack:       parseFloat(document.getElementById('cPack').value)    || 0,
+    retCost:    parseFloat(document.getElementById('cRetCost').value) || 0,
+    refRate:    parseFloat(document.getElementById('cRet').value)     || 0,
+    taxPct:     taxRate,
+    fixedCosts: userProfile?.fixed_costs || 0,
+    productName: document.getElementById('cName').value.trim() || 'Product',
+  };
+
+  const result = computePQ(inputs);
+  calcResult = { ...inputs, ...result };
+
+  const sym = SYM();
+  const fmt = (n, decimals = 0) => {
+    const abs = Math.abs(n);
+    const str = decimals > 0 ? abs.toFixed(decimals) : Math.round(abs).toLocaleString();
+    return (n < 0 ? '-' : '') + sym + str;
+  };
+  const fmtPct = n => (n >= 0 ? '+' : '') + n.toFixed(1) + '%';
+
+  // ── Render inline result ──
+  document.getElementById('rMinPrice').textContent = sym + Math.ceil(result.varCostPerUnit / ((1 - inputs.refRate/100) * (1 - taxRate/100))).toLocaleString();
+
+  const lines = [
+    ['Total Goods Cost',     -result.totalGoods,  'var(--red)'],
+    ['Ad Spend (CPA × sold)', -result.totalAds,   'var(--red)'],
+    ['Shipping',             -result.totalShip,   'var(--red)'],
+    ['Packaging',            -result.totalPack,   'var(--red)'],
+    ['Return Losses',        -result.totalRet,    'var(--red)'],
+    ['Tax (' + taxRate + '%)', -result.taxAmt,    'var(--blue)'],
+    ...(inputs.fixedCosts > 0 ? [['Fixed Costs', -inputs.fixedCosts, '#A78BFA']] : []),
+    ['Net Revenue',           result.netRev,      'var(--teal)'],
+  ];
+
+  document.getElementById('rBreakdown').innerHTML = lines.map(([l, v, c]) => `
+    <div class="result-row">
+      <span class="lbl">${l}</span>
+      <span class="val" style="color:${c}">${fmt(v)}</span>
+    </div>`).join('') + `
+    <div class="result-row" style="border-top:1px solid var(--border);margin-top:4px">
+      <span style="font-size:13px;font-weight:700">Net Profit</span>
+      <span style="font-size:15px;font-weight:800;font-family:'DM Mono',monospace;color:${result.netProfit >= 0 ? 'var(--teal)' : 'var(--red)'}">
+        ${fmt(result.netProfit)}
+      </span>
+    </div>`;
+
+  document.getElementById('resultsSection').style.display = 'block';
+
+  // Inline donut
+  buildDonut('calcDonut', result, inputs);
+
+  // ── KPI updates ──
+  document.getElementById('kNetProfit').textContent = fmt(result.netProfit);
+  document.getElementById('kNetProfit').style.color = result.netProfit >= 0 ? 'var(--teal)' : 'var(--red)';
+  document.getElementById('kROI').textContent       = fmtPct(result.roi);
+  document.getElementById('kROI').style.color       = result.roi >= 0 ? 'var(--gold)' : 'var(--red)';
+  document.getElementById('kMargin').textContent    = result.profitMargin.toFixed(1) + '%';
+  document.getElementById('kMargin').style.color    = result.profitMargin >= 20 ? 'var(--blue)' : result.profitMargin >= 10 ? 'var(--gold)' : 'var(--red)';
+
+  const bepDisplay = result.breakEvenQty === Infinity ? '∞' : result.breakEvenQty.toLocaleString();
+  document.getElementById('kBEP').textContent       = bepDisplay;
+  document.getElementById('bepVal').textContent     = bepDisplay;
+  document.getElementById('bepPill').style.display  = 'flex';
+
+  // Badges
+  const healthArr = result.profitMargin >= 30 ? ['Excellent', 'var(--teal)']
+    : result.profitMargin >= 15 ? ['Good', '#7ee787']
+    : result.profitMargin >= 0  ? ['Fair', 'var(--gold)']
+    : ['Loss', 'var(--red)'];
+
+  document.getElementById('kProfitBadge').textContent   = healthArr[0];
+  document.getElementById('kProfitBadge').style.background = healthArr[1] + '1a';
+  document.getElementById('kProfitBadge').style.color      = healthArr[1];
+  document.getElementById('kRoiBadge').textContent = result.roi >= 0 ? 'Positive' : 'Negative';
+  document.getElementById('kMarginBadge').textContent = healthArr[0];
+  document.getElementById('kBepBadge').textContent = result.breakEvenQty <= inputs.qty ? 'Achievable' : 'Above batch';
+
+  // ── Dashboard full render ──
+  renderDashResults(calcResult);
+
+  // Save to Supabase if logged in
+  if (currentUser) {
+    await sb.from('calculations').insert({
+      user_id:      currentUser.id,
+      product_name: inputs.productName,
+      quantity:     inputs.qty,
+      net_profit:   result.netProfit,
+      roi_pct:      result.roi,
+      break_even_qty: result.breakEvenQty === Infinity ? 9999999 : result.breakEvenQty,
+      profit_margin:  result.profitMargin,
+      suggested_price: Math.ceil(result.minPrice),
+      payload: calcResult
+    });
+  }
+
+  btn.disabled = false;
+  document.getElementById('calcBtnLbl').textContent = 'Run P(q) Analysis';
+  toast('✓ Analysis complete');
+  document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ══════════ DASHBOARD RENDER ══════════
+function renderDashResults(d) {
+  if (!d) return;
+  const sym = SYM();
+  const fmt = n => (n < 0 ? '-' + sym : sym) + Math.abs(Math.round(n)).toLocaleString();
+
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('dashSummary').style.display = 'block';
+  document.getElementById('dashProdName').textContent = d.productName || 'Product';
+
+  // Breakdown
+  const lines = [
+    ['Goods',    -d.totalGoods, 'var(--red)'],
+    ['Ads (CPA)', -d.totalAds,  'var(--red)'],
+    ['Shipping', -d.totalShip, 'var(--red)'],
+    ['Returns',  -d.totalRet,  'var(--red)'],
+    ['Tax',      -d.taxAmt,    'var(--blue)'],
+    ['Net Revenue', d.netRev,  'var(--teal)'],
+  ];
+  document.getElementById('dashBreakdown').innerHTML = lines.map(([l, v, c]) => `
+    <div class="result-row">
+      <span class="lbl">${l}</span>
+      <span class="val" style="color:${c}">${fmt(v)}</span>
+    </div>`).join('') + `
+    <div class="result-row">
+      <span style="font-size:12px;font-weight:700">Net Profit</span>
+      <span class="mono" style="font-size:13px;font-weight:700;color:${d.netProfit>=0?'var(--teal)':'var(--red)'}">
+        ${fmt(d.netProfit)}
+      </span>
+    </div>`;
+
+  // Health ring
+  const pct = Math.max(0, Math.min(100, d.profitMargin));
+  const [hl, hc] = d.profitMargin >= 30 ? ['Excellent', 'var(--teal)']
+    : d.profitMargin >= 15 ? ['Good', '#7ee787']
+    : d.profitMargin >= 0  ? ['Fair', 'var(--gold)']
+    : ['Loss', 'var(--red)'];
+  const ring = document.getElementById('healthRing');
+  ring.textContent = pct.toFixed(0) + '%';
+  ring.style.borderColor = hc; ring.style.color = hc;
+  document.getElementById('healthLabel').textContent = hl;
+  document.getElementById('healthLabel').style.color = hc;
+
+  // BEP bar
+  const bep = d.breakEvenQty === Infinity ? d.qty * 2 : d.breakEvenQty;
+  const bepPct = Math.min(100, (d.qty / Math.max(bep, d.qty)) * 100);
+  document.getElementById('bepBarFill').style.width = bepPct + '%';
+  document.getElementById('bepBarFill').style.background = bepPct >= 80 ? 'var(--teal)' : 'var(--gold)';
+  document.getElementById('bepTarget').textContent = bep === Infinity ? '∞' : bep.toLocaleString();
+  document.getElementById('bepPill').style.display = 'flex';
+  document.getElementById('bepVal').textContent = bep === Infinity ? '∞' : bep.toLocaleString();
+
+  // Sensitivity table
+  buildSensitivity(d, sym);
+  // Dashboard donut
+  buildDonut('donutChart', d, d);
+}
+
+// ══════════ SENSITIVITY ANALYSIS ══════════
+function buildSensitivity(d, sym) {
+  const vars = [
+    { key: 'refRate', label: 'Refund Rate (r)',    desc: '% returns' },
+    { key: 'ads',     label: 'Ad Spend / CPA (a)', desc: 'per order' },
+    { key: 'price',   label: 'Selling Price (s)',   desc: 'per unit'  },
+    { key: 'cost',    label: 'Unit Cost (c)',        desc: 'purchase'  },
+    { key: 'ship',    label: 'Shipping',             desc: 'per unit'  },
+  ];
+
+  const baseProfit = d.netProfit;
+
+  const rows = vars.map(v => {
+    const d5  = sensitivityDelta(d, v.key, 5);
+    const dm5 = sensitivityDelta(d, v.key, -5);
+    const sensitivity = Math.abs(d5) > Math.abs(dm5) ? Math.abs(d5) : Math.abs(dm5);
+    const bars = '▓'.repeat(Math.min(5, Math.round(sensitivity / (Math.abs(baseProfit) || 1) * 20))) || '░';
+    return `<tr>
+      <td style="color:rgba(226,234,244,0.8)">${v.label}</td>
+      <td style="color:var(--muted)">${typeof d[v.key] === 'number' ? (v.key === 'refRate' ? d[v.key] + '%' : sym + d[v.key].toFixed(2)) : '—'}</td>
+      <td><span class="delta-pill ${d5 >= 0 ? 'delta-pos' : 'delta-neg'}">${d5 >= 0 ? '+' : ''}${sym}${Math.abs(Math.round(d5)).toLocaleString()}</span></td>
+      <td><span class="delta-pill ${dm5 >= 0 ? 'delta-pos' : 'delta-neg'}">${dm5 >= 0 ? '+' : ''}${sym}${Math.abs(Math.round(dm5)).toLocaleString()}</span></td>
+      <td style="color:var(--gold);font-size:12px">${bars}</td>
+    </tr>`;
+  });
+
+  document.getElementById('sensTableBody').innerHTML = rows.join('');
+
+  // Sensitivity bar chart
+  const ctx = document.getElementById('sensChart').getContext('2d');
+  if (sensChartInst) sensChartInst.destroy();
+  const posVals = vars.map(v => Math.max(0, sensitivityDelta(d, v.key, 5)));
+  const negVals = vars.map(v => Math.min(0, sensitivityDelta(d, v.key, 5)));
+  sensChartInst = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: vars.map(v => v.label.split(' ').slice(0,3).join(' ')),
+      datasets: [
+        { label: '+5% Impact', data: posVals, backgroundColor: 'rgba(0,212,184,0.6)', borderRadius: 4 },
+        { label: '−5% Impact', data: negVals, backgroundColor: 'rgba(244,63,94,0.5)', borderRadius: 4 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#5A6880', font: { family: 'DM Mono', size: 10 } } } },
+      scales: {
+        x: { ticks: { color: '#5A6880', font: { family: 'DM Mono', size: 9 } }, grid: { color: 'rgba(255,255,255,0.03)' } },
+        y: { ticks: { color: '#5A6880', font: { family: 'DM Mono', size: 9 }, callback: v => SYM() + v.toLocaleString() }, grid: { color: 'rgba(255,255,255,0.04)' } }
+      }
+    }
+  });
+}
+
+// ══════════ DONUT CHART ══════════
+function buildDonut(canvasId, d, inputs) {
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  const inst = canvasId === 'donutChart' ? donutInst : calcDonutInst;
+  if (inst) inst.destroy();
+  const chart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Goods', 'Ads', 'Shipping', 'Packaging', 'Returns', 'Tax', 'Profit'],
+      datasets: [{
+        data: [d.totalGoods, d.totalAds, d.totalShip, d.totalPack, d.totalRet, d.taxAmt, Math.max(0, d.netProfit)].map(Math.abs),
+        backgroundColor: ['#ef4444','#f97316','#eab308','#a855f7','#f43f5e','#60a5fa','#00d4b8'],
+        borderWidth: 0, hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '62%',
+      plugins: {
+        legend: { position: 'right', labels: { color: '#5A6880', font: { family: 'DM Mono', size: 10 }, padding: 8, boxWidth: 10 } },
+        tooltip: { callbacks: { label: c => ' ' + c.label + ': ' + SYM() + Math.round(c.raw).toLocaleString() } }
+      }
+    }
+  });
+  if (canvasId === 'donutChart') donutInst = chart;
+  else calcDonutInst = chart;
+}
+
+// ══════════ TOAST ══════════
+let _t;
+function toast(msg, err = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.toggle('err', err);
+  el.classList.add('show');
+  clearTimeout(_t);
+  _t = setTimeout(() => el.classList.remove('show'), 3200);
+}
+</script>
+</body>
+</html>
