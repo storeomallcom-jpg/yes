@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Ribhi — Create Account</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg:       #05070A;
+    --bg2:      #0D1117;
+    --bg3:      #131920;
+    --teal:     #00D4B8;
+    --teal-d:   #009E8E;
+    --gold:     #F0B429;
+    --gold-d:   #C4901E;
+    --red:      #F43F5E;
+    --text:     #E2EAF4;
+    --muted:    #5A6880;
+    --border:   rgba(255,255,255,0.06);
+    --glass:    rgba(13,17,23,0.9);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+    padding: 24px 16px;
+  }
+
+  /* ── BACKGROUND ── */
+  .grid-bg {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image:
+      linear-gradient(rgba(0,212,184,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,184,0.025) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  .grid-bg::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 10% 20%, rgba(0,212,184,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 50% at 90% 80%, rgba(240,180,41,0.06) 0%, transparent 60%);
+  }
+
+  /* ── FORM SHELL ── */
+  .form-shell {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 460px;
+    animation: rise 0.6s cubic-bezier(.22,1,.36,1) forwards;
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── LOGO ── */
+  .logo {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 40px;
+  }
+  .logo-mark {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--teal), var(--gold));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 18px; color: #05070A; letter-spacing: -1px;
+  }
+  .logo-text { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .logo-text span { color: var(--teal); }
+  .logo-sub { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 1px; letter-spacing: 1px; text-transform: uppercase; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.04) inset;
+  }
+
+  .card-head { margin-bottom: 32px; }
+  .card-head h1 { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+  .card-head p { font-size: 13px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+
+  /* ── STEP INDICATOR ── */
+  .steps {
+    display: flex; gap: 8px; margin-bottom: 32px; align-items: center;
+  }
+  .step {
+    flex: 1; height: 3px; border-radius: 2px;
+    background: var(--border);
+    transition: background 0.4s;
+  }
+  .step.done { background: var(--teal-d); }
+  .step.active { background: var(--teal); }
+
+  /* ── FIELDS ── */
+  .field-wrap { margin-bottom: 18px; }
+  .field-label {
+    display: block; font-size: 11px; font-weight: 600;
+    color: var(--muted); margin-bottom: 7px; letter-spacing: 0.6px; text-transform: uppercase;
+    font-family: 'DM Mono', monospace;
+  }
+  .field {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+  .field:focus {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(0,212,184,0.1);
+  }
+  .field::placeholder { color: var(--muted); font-size: 13px; }
+  .field.error { border-color: var(--red); box-shadow: 0 0 0 3px rgba(244,63,94,0.12); }
+
+  select.field {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235A6880' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+  }
+  select.field option { background: #131920; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* ── PERCENTAGE HINT ── */
+  .input-addon {
+    position: relative;
+  }
+  .input-addon .field { padding-right: 48px; }
+  .input-addon .addon {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+    font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); pointer-events: none;
+  }
+
+  /* ── BUTTON ── */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 14px; border-radius: 12px;
+    font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700;
+    border: none; cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-teal {
+    background: linear-gradient(135deg, var(--teal), var(--teal-d));
+    color: #05070A;
+    box-shadow: 0 4px 20px rgba(0,212,184,0.25);
+  }
+  .btn-teal:hover { box-shadow: 0 8px 30px rgba(0,212,184,0.4); transform: translateY(-1px); }
+  .btn:disabled { opacity: 0.5; pointer-events: none; }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px; padding: 10px;
+  }
+  .btn-ghost:hover { border-color: rgba(255,255,255,0.15); color: var(--text); }
+
+  /* ── ERROR MSG ── */
+  .error-msg {
+    display: none; font-size: 12px; color: var(--red);
+    margin-top: 5px; font-family: 'DM Mono', monospace;
+  }
+  .error-msg.show { display: block; }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg3); border: 1px solid rgba(0,212,184,0.25);
+    border-radius: 10px; padding: 11px 20px;
+    font-size: 13px; font-weight: 600; z-index: 999;
+    white-space: nowrap; opacity: 0;
+    transition: all 0.35s cubic-bezier(.34,1.4,.64,1);
+    pointer-events: none; font-family: 'DM Mono', monospace;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.err  { border-color: rgba(244,63,94,0.35); color: var(--red); }
+
+  /* ── STEP PAGES ── */
+  .step-page { display: none; }
+  .step-page.active { display: block; }
+
+  /* ── DIVIDER ── */
+  .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; }
+  .divider span { flex: 1; height: 1px; background: var(--border); }
+  .divider p { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; white-space: nowrap; }
+
+  /* ── CURRENCY PREVIEW ── */
+  .currency-preview {
+    background: rgba(0,212,184,0.06);
+    border: 1px solid rgba(0,212,184,0.15);
+    border-radius: 10px; padding: 12px 14px;
+    font-family: 'DM Mono', monospace; font-size: 13px;
+    color: var(--teal); margin-top: -4px; margin-bottom: 18px;
+    display: none;
+  }
+  .currency-preview.show { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+
+  /* ── LOADER ── */
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(5,7,10,0.4);
+    border-top-color: #05070A;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .sign-in-link {
+    text-align: center; margin-top: 20px;
+    font-size: 13px; color: var(--muted);
+  }
+  .sign-in-link a { color: var(--teal); font-weight: 600; text-decoration: none; }
+  .sign-in-link a:hover { text-decoration: underline; }
+
+  @media (max-width: 500px) {
+    .card { padding: 24px 20px; }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div id="toast"></div>
+
+<div class="form-shell">
+  <!-- Logo -->
+  <div class="logo">
+    <div class="logo-mark">R</div>
+    <div>
+      <div class="logo-text">Ri<span>bhi</span></div>
+      <div class="logo-sub">Profit Analytics</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <!-- Step Progress -->
+    <div class="steps">
+      <div class="step active"  id="sp1"></div>
+      <div class="step"         id="sp2"></div>
+      <div class="step"         id="sp3"></div>
+    </div>
+
+    <!-- STEP 1: Account -->
+    <div class="step-page active" id="pg1">
+      <div class="card-head">
+        <h1>Create your account</h1>
+        <p>Start analyzing profit margins for free — no card required.</p>
+      </div>
+      <div class="field-wrap">
+        <label class="field-label">Full Name</label>
+        <input type="text" id="r_name" class="field" placeholder="Alex Chen" autocomplete="name"/>
+      </div>
+      <div class="field-wrap">
+        <label class="field-label">Email Address</label>
+        <input type="email" id="r_email" class="field" placeholder="alex@store.com" autocomplete="email"/>
+        <div class="error-msg" id="err_email">Please enter a valid email address.</div>
+      </div>
+      <div class="field-wrap">
+        <label class="field-label">Password</label>
+        <input type="password" id="r_pass" class="field" placeholder="Min. 8 characters" autocomplete="new-password"/>
+        <div class="error-msg" id="err_pass">Password must be at least 8 characters.</div>
+      </div>
+      <button class="btn btn-teal" onclick="goStep2()">Continue →</button>
+      <div class="sign-in-link">Already have an account? <a href="index.html">Sign in</a></div>
+    </div>
+
+    <!-- STEP 2: Locale -->
+    <div class="step-page" id="pg2">
+      <div class="card-head">
+        <h1>Where do you sell?</h1>
+        <p>This sets your currency and default tax framework.</p>
+      </div>
+      <div class="field-wrap">
+        <label class="field-label">Country</label>
+        <select id="r_country" class="field" onchange="onCountryChange()">
+          <option value="">Select country…</option>
+          <option value="US">🇺🇸 United States</option>
+          <option value="GB">🇬🇧 United Kingdom</option>
+          <option value="CA">🇨🇦 Canada</option>
+          <option value="AU">🇦🇺 Australia</option>
+          <option value="DE">🇩🇪 Germany</option>
+          <option value="FR">🇫🇷 France</option>
+          <option value="MA">🇲🇦 Morocco</option>
+          <option value="AE">🇦🇪 UAE</option>
+          <option value="SA">🇸🇦 Saudi Arabia</option>
+          <option value="EG">🇪🇬 Egypt</option>
+          <option value="NG">🇳🇬 Nigeria</option>
+          <option value="BR">🇧🇷 Brazil</option>
+          <option value="MX">🇲🇽 Mexico</option>
+          <option value="IN">🇮🇳 India</option>
+          <option value="SG">🇸🇬 Singapore</option>
+          <option value="OTHER">🌐 Other</option>
+        </select>
+      </div>
+      <div class="grid-2">
+        <div class="field-wrap">
+          <label class="field-label">Currency</label>
+          <select id="r_currency" class="field" onchange="onCurrencyChange()">
+            <option value="USD">USD — $</option>
+            <option value="GBP">GBP — £</option>
+            <option value="CAD">CAD — C$</option>
+            <option value="AUD">AUD — A$</option>
+            <option value="EUR">EUR — €</option>
+            <option value="MAD">MAD — DH</option>
+            <option value="AED">AED — AED</option>
+            <option value="SAR">SAR — SAR</option>
+            <option value="EGP">EGP — EGP</option>
+            <option value="NGN">NGN — ₦</option>
+            <option value="BRL">BRL — R$</option>
+            <option value="MXN">MXN — MX$</option>
+            <option value="INR">INR — ₹</option>
+            <option value="SGD">SGD — S$</option>
+          </select>
+        </div>
+        <div class="field-wrap">
+          <label class="field-label">Default Tax Rate</label>
+          <div class="input-addon">
+            <input type="number" id="r_tax" class="field" placeholder="20" value="20" min="0" max="100" step="0.5"/>
+            <span class="addon">%</span>
+          </div>
+        </div>
+      </div>
+      <div class="currency-preview" id="currPreview">
+        <span>💱 Example price:</span>
+        <span id="currExample" style="font-weight:500">$100.00</span>
+      </div>
+      <button class="btn btn-teal" onclick="goStep3()">Continue →</button>
+      <div class="divider"><span></span><p>step 2 of 3</p><span></span></div>
+      <button class="btn btn-ghost" onclick="goStep(1)">← Back</button>
+    </div>
+
+    <!-- STEP 3: Operational Costs -->
+    <div class="step-page" id="pg3">
+      <div class="card-head">
+        <h1>Fixed monthly costs</h1>
+        <p>Used for break-even analysis. You can always update these in Settings.</p>
+      </div>
+      <div class="field-wrap">
+        <label class="field-label">Monthly Fixed Costs <span style="color:var(--muted)">(rent, salaries, subscriptions…)</span></label>
+        <div class="input-addon">
+          <input type="number" id="r_fixed" class="field" placeholder="500" value="0" min="0" step="10"/>
+          <span class="addon" id="fixedCurrAddon">$</span>
+        </div>
+      </div>
+      <div class="field-wrap" style="margin-top:8px">
+        <label class="field-label" style="color:rgba(90,104,128,0.7)">Tip: If you're just starting, enter 0 — you can refine later.</label>
+      </div>
+      <button class="btn btn-teal" id="finalBtn" onclick="doRegister()">
+        <span id="finalBtnLbl">Create Account & Enter Dashboard</span>
+      </button>
+      <div class="divider"><span></span><p>step 3 of 3</p><span></span></div>
+      <button class="btn btn-ghost" onclick="goStep(2)">← Back</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──
+const SUPABASE_URL  = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY';
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON, {
+  auth: { persistSession: true, autoRefreshToken: true }
+});
+
+// ── Country → Currency map ──
+const COUNTRY_MAP = {
+  US: { currency: 'USD', symbol: '$',   tax: 10 },
+  GB: { currency: 'GBP', symbol: '£',   tax: 20 },
+  CA: { currency: 'CAD', symbol: 'C$',  tax: 13 },
+  AU: { currency: 'AUD', symbol: 'A$',  tax: 10 },
+  DE: { currency: 'EUR', symbol: '€',   tax: 19 },
+  FR: { currency: 'EUR', symbol: '€',   tax: 20 },
+  MA: { currency: 'MAD', symbol: 'DH',  tax: 20 },
+  AE: { currency: 'AED', symbol: 'AED', tax: 5  },
+  SA: { currency: 'SAR', symbol: 'SAR', tax: 15 },
+  EG: { currency: 'EGP', symbol: 'EGP', tax: 14 },
+  NG: { currency: 'NGN', symbol: '₦',   tax: 7.5 },
+  BR: { currency: 'BRL', symbol: 'R$',  tax: 17 },
+  MX: { currency: 'MXN', symbol: 'MX$', tax: 16 },
+  IN: { currency: 'INR', symbol: '₹',   tax: 18 },
+  SG: { currency: 'SGD', symbol: 'S$',  tax: 9  },
+};
+
+let currentStep = 1;
+
+function goStep(n) {
+  document.getElementById('pg' + currentStep).classList.remove('active');
+  document.getElementById('sp' + currentStep).classList.remove('active');
+  document.getElementById('sp' + currentStep).classList.add('done');
+  currentStep = n;
+  document.getElementById('pg' + n).classList.add('active');
+  document.getElementById('sp' + n).classList.add('active');
+}
+
+function goStep2() {
+  const email = document.getElementById('r_email').value.trim();
+  const pass  = document.getElementById('r_pass').value;
+  let ok = true;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    document.getElementById('err_email').classList.add('show');
+    document.getElementById('r_email').classList.add('error');
+    ok = false;
+  } else {
+    document.getElementById('err_email').classList.remove('show');
+    document.getElementById('r_email').classList.remove('error');
+  }
+  if (pass.length < 8) {
+    document.getElementById('err_pass').classList.add('show');
+    document.getElementById('r_pass').classList.add('error');
+    ok = false;
+  } else {
+    document.getElementById('err_pass').classList.remove('show');
+    document.getElementById('r_pass').classList.remove('error');
+  }
+  if (ok) goStep(2);
+}
+
+function goStep3() {
+  if (!document.getElementById('r_country').value) {
+    toast('Please select a country.', true); return;
+  }
+  goStep(3);
+}
+
+function onCountryChange() {
+  const code = document.getElementById('r_country').value;
+  const m    = COUNTRY_MAP[code];
+  if (m) {
+    document.getElementById('r_currency').value = m.currency;
+    document.getElementById('r_tax').value      = m.tax;
+    onCurrencyChange();
+  }
+}
+
+function onCurrencyChange() {
+  const cur  = document.getElementById('r_currency').value;
+  const sym  = getCurrencySymbol(cur);
+  const prev = document.getElementById('currPreview');
+  document.getElementById('currExample').textContent = sym + '100.00';
+  document.getElementById('fixedCurrAddon').textContent = sym;
+  prev.classList.add('show');
+}
+
+function getCurrencySymbol(cur) {
+  const map = { USD:'$', GBP:'£', CAD:'C$', AUD:'A$', EUR:'€', MAD:'DH', AED:'AED', SAR:'SAR', EGP:'EGP', NGN:'₦', BRL:'R$', MXN:'MX$', INR:'₹', SGD:'S$' };
+  return map[cur] || cur + ' ';
+}
+
+async function doRegister() {
+  const name     = document.getElementById('r_name').value.trim()  || 'User';
+  const email    = document.getElementById('r_email').value.trim();
+  const pass     = document.getElementById('r_pass').value;
+  const country  = document.getElementById('r_country').value || 'US';
+  const currency = document.getElementById('r_currency').value;
+  const tax      = parseFloat(document.getElementById('r_tax').value) || 0;
+  const fixed    = parseFloat(document.getElementById('r_fixed').value) || 0;
+  const symbol   = getCurrencySymbol(currency);
+
+  const btn = document.getElementById('finalBtn');
+  btn.disabled = true;
+  document.getElementById('finalBtnLbl').innerHTML = '<div class="spinner"></div>';
+
+  try {
+    const { data, error } = await sb.auth.signUp({
+      email, password: pass,
+      options: { data: { full_name: name } }
+    });
+    if (error) throw error;
+
+    if (data.user) {
+      await sb.from('profiles').upsert({
+        id: data.user.id,
+        full_name: name,
+        country,
+        currency,
+        currency_symbol: symbol,
+        default_tax_rate: tax,
+        fixed_costs: fixed
+      });
+    }
+
+    toast('🎉 Account created! Redirecting…');
+    setTimeout(() => window.location.href = 'index.html', 1400);
+  } catch (err) {
+    toast(err.message || 'Registration failed. Try again.', true);
+    btn.disabled = false;
+    document.getElementById('finalBtnLbl').textContent = 'Create Account & Enter Dashboard';
+  }
+}
+
+let _t;
+function toast(msg, err = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.toggle('err', err);
+  el.classList.add('show');
+  clearTimeout(_t);
+  _t = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// On load: if already logged in, redirect
+(async () => {
+  const { data } = await sb.auth.getUser();
+  if (data?.user) window.location.href = 'index.html';
+})();
+</script>
+</body>
+</html>
